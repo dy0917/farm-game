@@ -40,6 +40,12 @@ class App extends Component {
 		requestAnimationFrame(() => {this.update()});  
 	}
 
+
+	componentWillUnmount() {
+		this.state.input.unbindKeys();
+	}
+
+
 	update() {
 		const keys = this.state.input.pressedKeys;
 		if (this.state.gameState === GameState.StartScreen && keys.enter) {
