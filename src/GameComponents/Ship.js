@@ -1,20 +1,18 @@
 import playerImgPath from './player.png'
 import Bullet from './Bullet'
-export default class Ship {
-	constructor(args){
-		this.position = args.position;      
-		this.speed = args.speed;
-		this.radius = args.radius; 
-		this.delete = false;
-		this.onDie = args.onDie;
+import GameObject from './GameObject';
+export default class Ship extends GameObject {
+	constructor(args) {
+		super({ position: args.position, onDie: args.onDie, speed: 2.5, radius: 15 });
 		this.direction=0;
 		this.actionIndex=0;
 		this.actionCounter=0;
-
-
 		this.bullets = [];
 		this.lastShot = 0;
+	}
 
+	die() {
+		this.onDie();
 	}
 
 	update(keys) {

@@ -1,8 +1,10 @@
 import React, { Component } from 'react';
 import TitleScreen from './ReactComponents/TitleScreen';
+import GameOverScreen from './ReactComponents/GameOverScreen';
 import Ship from './GameComponents/Ship';
 import Invader from './GameComponents/Invader';
 import InputManager from './InputManager';
+import { checkCollisionsWith } from './Helper';
 import './App.css';
 
 const width = 800;
@@ -27,7 +29,8 @@ class App extends Component {
 				ratio: window.devicePixelRatio || 1        
 			},
 			gameState: GameState.StartScreen,
-			context: null
+			context: null,
+			score: 0
 		}
 		this.ship = null
 		this.invaders = [];
@@ -59,8 +62,21 @@ class App extends Component {
 			if (this.ship !== undefined && this.ship !== null) {
 				this.ship.update(keys);   
 				this.renderInvaders(this.state);
-					this.ship.render(this.state);  
+				this.ship.render(this.state);
+				checkCollisionsWith(this.ship.bullets, this.invaders);
+				checkCollisionsWith([this.ship], this.invaders);
+				for (var i = 0; i < this.invaders.length; i++) {
+					checkCollisionsWith(this.invaders[i].bullets, [this.ship]);
+				}  
 			}
+			if (this.invaders.length === 0) {
+				this.setState({ gameState: GameState.GameOver });
+			}
+		}
+
+
+		if (this.state.gameState === GameState.GameOver && keys.enter) {
+			this.setState({ gameState: GameState.StartScreen});     
 		}
 		requestAnimationFrame(() => {this.update()});
 	}
@@ -73,6 +89,13 @@ class App extends Component {
 		context.globalAlpha = 1;
 	}
 
+	die() {
+		this.setState({ gameState: GameState.GameOver });
+		this.ship = null;
+		this.invaders = [];
+		this.lastStateChange = Date.now();
+	}
+
 	startGame() {
 		let ship = new Ship({
 			radius: 15,
@@ -80,13 +103,21 @@ class App extends Component {
 			position: {
 				x: this.state.screen.width/2,
 				y: this.state.screen.height - 50
-			}});
+			},
+			onDie: this.die.bind(this),
+		});
 		this.ship = ship;
 		this.createInvaders(27);
 		this.setState({
 			gameState: GameState.Playing
 		});
 	}
+
+
+	increaseScore() {
+		this.setState({ score: this.state.score + 500});
+	}
+
 
 	createInvaders(count) {
 		const newPosition = { x: 100, y: 20 };
@@ -96,7 +127,8 @@ class App extends Component {
 			const invader = new Invader({
 				position: { x: newPosition.x, y: newPosition.y },
 				speed: 1,
-				radius: 50
+				radius: 50,
+				onDie: this.increaseScore.bind(this, false)
 			});
 
 			newPosition.x += invader.radius + 20;
@@ -148,6 +180,7 @@ render() {
 	return (
 		<div>   
 		{ this.state.gameState === GameState.StartScreen && <TitleScreen /> }  
+		{ this.state.gameState === GameState.GameOver && <GameOverScreen score= { this.state.score } /> }  
 		<canvas ref="canvas"
 		width={ this.state.screen.width * this.state.screen.ratio }
 		height={ this.state.screen.height * this.state.screen.ratio } />

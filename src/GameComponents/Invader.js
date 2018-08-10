@@ -15,6 +15,11 @@ export default class Invader extends GameObject {
 		this.shootDelay = Date.now();
 	}
 
+	die() {
+	    this.delete = true;
+	    this.onDie();
+	}
+	
 	reverse() {
 		if (this.direction === Direction.Right) {
 			this.position.x -= 10;
